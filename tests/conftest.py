@@ -4,7 +4,7 @@ from functools import partial
 
 from pip._vendor.packaging.version import Version
 from pip._vendor.pkg_resources import Requirement
-from pip.req import InstallRequirement
+from piptools._compat import InstallRequirement
 from pytest import fixture
 
 from piptools.cache import DependencyCache
@@ -16,10 +16,10 @@ from piptools.exceptions import NoCandidateFound
 
 class FakeRepository(BaseRepository):
     def __init__(self):
-        with open('tests/fixtures/fake-index.json', 'r') as f:
+        with open('tests/test_data/fake-index.json', 'r') as f:
             self.index = json.load(f)
 
-        with open('tests/fixtures/fake-editables.json', 'r') as f:
+        with open('tests/test_data/fake-editables.json', 'r') as f:
             self.editables = json.load(f)
 
     def get_hashes(self, ireq):

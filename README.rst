@@ -20,8 +20,8 @@ even when you've pinned them.  `You do pin them, right?`_
    :alt: Jazzband
    :target: https://jazzband.co/
 .. |pypi| image:: https://img.shields.io/pypi/v/pip-tools.svg
-   :alt: PyPi
-   :target: https://pypi.python.org/pypi/pip-tools/
+   :alt: PyPI
+   :target: https://pypi.org/project/pip-tools/
 .. _You do pin them, right?: http://nvie.com/posts/pin-your-packages/
 
 
@@ -34,7 +34,6 @@ recommended to install ``pip-tools`` in each project's `virtual environment`_:
 .. code-block:: bash
 
     $ source /path/to/venv/bin/activate
-    (venv)$ pip install --upgrade pip  # pip-tools needs pip==8.0 or higher (!)
     (venv)$ pip install pip-tools
 
 **Note**: all of the remaining example commands assume you've activated your
@@ -156,7 +155,7 @@ To update a specific package to the latest or a specific version use the
 
     $ pip-compile --upgrade-package flask  # only update the flask package
     $ pip-compile --upgrade-package flask --upgrade-package requests  # update both the flask and requests packages
-    $ pip-compile -P flask -P requests==2.0.0  # update the flask package to the latest, and requests to v2.0.0
+    $ pip-compile -P flask -P requests  # same as above, but shorter
 
 If you use multiple Python versions, you can run ``pip-compile`` as
 ``py -X.Y -m piptools compile ...`` on Windows and

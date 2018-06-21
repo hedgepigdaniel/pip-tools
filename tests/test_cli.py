@@ -10,6 +10,16 @@ from click.testing import CliRunner
 import pytest
 from piptools.scripts.compile import cli
 from piptools.scripts.sync import cli as sync_cli
+from pip._vendor.packaging.version import parse as parse_version
+from pip import __version__ as pip_version
+
+
+PIP_VERSION = parse_version(os.environ.get('PIP', pip_version))
+
+fail_below_pip9 = pytest.mark.xfail(
+    PIP_VERSION < parse_version('9'),
+    reason="needs pip 9 or greater"
+)
 
 
 @pytest.yield_fixture
@@ -45,7 +55,8 @@ def test_default_pip_conf_read(pip_conf):
     runner = CliRunner()
     with runner.isolated_filesystem():
         # preconditions
-        open('requirements.in', 'w').close()
+        with open('requirements.in', 'w'):
+            pass
         out = runner.invoke(cli, ['-v'])
 
         # check that we have our index-url as specified in pip.conf
@@ -60,7 +71,8 @@ def test_command_line_overrides_pip_conf(pip_conf):
     runner = CliRunner()
     with runner.isolated_filesystem():
         # preconditions
-        open('requirements.in', 'w').close()
+        with open('requirements.in', 'w'):
+            pass
         out = runner.invoke(cli, ['-v', '-i', 'http://override.com'])
 
         # check that we have our index-url as specified in pip.conf
@@ -89,7 +101,8 @@ def test_find_links_option(pip_conf):
 
     runner = CliRunner()
     with runner.isolated_filesystem():
-        open('requirements.in', 'w').close()
+        with open('requirements.in', 'w'):
+            pass
         out = runner.invoke(cli, ['-v', '-f', './libs1', '-f', './libs2'])
 
         # Check that find-links has been passed to pip
@@ -102,7 +115,8 @@ def test_extra_index_option(pip_conf):
 
     runner = CliRunner()
     with runner.isolated_filesystem():
-        open('requirements.in', 'w').close()
+        with open('requirements.in', 'w'):
+            pass
         out = runner.invoke(cli, ['-v',
                                   '--extra-index-url', 'http://extraindex1.com',
                                   '--extra-index-url', 'http://extraindex2.com'])
@@ -120,7 +134,8 @@ def test_trusted_host(pip_conf):
 
     runner = CliRunner()
     with runner.isolated_filesystem():
-        open('requirements.in', 'w').close()
+        with open('requirements.in', 'w'):
+            pass
         out = runner.invoke(cli, ['-v',
                                   '--trusted-host', 'example.com',
                                   '--trusted-host', 'example2.com'])
@@ -133,7 +148,8 @@ def test_trusted_host_no_emit(pip_conf):
 
     runner = CliRunner()
     with runner.isolated_filesystem():
-        open('requirements.in', 'w').close()
+        with open('requirements.in', 'w'):
+            pass
         out = runner.invoke(cli, ['-v',
                                   '--trusted-host', 'example.com',
                                   '--no-emit-trusted-host'])
@@ -147,7 +163,7 @@ def test_realistic_complex_sub_dependencies(tmpdir):
     subprocess.check_output(['pip', 'wheel',
                              '--no-deps',
                              '-w', str(tmpdir),
-                             os.path.join('.', 'tests', 'fixtures', 'fake_package', '.')])
+                             os.path.join('.', 'tests', 'test_data', 'fake_package', '.')])
 
     runner = CliRunner()
     with runner.isolated_filesystem():
@@ -235,7 +251,7 @@ def test_url_package(tmpdir):
 
 def test_editable_package(tmpdir):
     """ piptools can compile an editable """
-    fake_package_dir = os.path.join(os.path.split(__file__)[0], 'fixtures', 'small_fake_package')
+    fake_package_dir = os.path.join(os.path.split(__file__)[0], 'test_data', 'small_fake_package')
     fake_package_dir = 'file:' + pathname2url(fake_package_dir)
     runner = CliRunner()
     with runner.isolated_filesystem():
@@ -289,7 +305,7 @@ def test_locally_available_editable_package_is_not_archived_in_cache_dir(tmpdir)
     """ piptools will not create an archive for a locally available editable requirement """
     cache_dir = tmpdir.mkdir('cache_dir')
 
-    fake_package_dir = os.path.join(os.path.split(__file__)[0], 'fixtures', 'small_fake_package')
+    fake_package_dir = os.path.join(os.path.split(__file__)[0], 'test_data', 'small_fake_package')
     fake_package_dir = 'file:' + pathname2url(fake_package_dir)
 
     with mock.patch('piptools.repositories.pypi.CACHE_DIR', new=str(cache_dir)):
@@ -329,7 +345,7 @@ def test_upgrade_packages_option(tmpdir):
     """
     piptools respects --upgrade-package/-P inline list.
     """
-    fake_package_dir = os.path.join(os.path.split(__file__)[0], 'fixtures', 'minimal_wheels')
+    fake_package_dir = os.path.join(os.path.split(__file__)[0], 'test_data', 'minimal_wheels')
     runner = CliRunner()
     with runner.isolated_filesystem():
         with open('requirements.in', 'w') as req_in:
@@ -348,10 +364,13 @@ def test_upgrade_packages_option(tmpdir):
 
 
 def test_generate_hashes_with_editable():
+    small_fake_package_dir = os.path.join(
+        os.path.split(__file__)[0], 'test_data', 'small_fake_package')
+    small_fake_package_url = 'file:' + pathname2url(small_fake_package_dir)
     runner = CliRunner()
     with runner.isolated_filesystem():
         with open('requirements.in', 'w') as fp:
-            fp.write('-e git+https://github.com/django/django.git@1.11.1#egg=django\n')
+            fp.write('-e {}\n'.format(small_fake_package_url))
             fp.write('pytz==2017.2\n')
         out = runner.invoke(cli, ['--generate-hashes'])
     expected = (
@@ -361,10 +380,54 @@ def test_generate_hashes_with_editable():
         '#\n'
         '#    pip-compile --generate-hashes --output-file requirements.txt requirements.in\n'
         '#\n'
-        '-e git+https://github.com/django/django.git@1.11.1#egg=django\n'
+        '-e {}\n'
         'pytz==2017.2 \\\n'
         '    --hash=sha256:d1d6729c85acea5423671382868627129432fba9a89ecbb248d8d1c7a9f01c67 \\\n'
         '    --hash=sha256:f5c056e8f62d45ba8215e5cb8f50dfccb198b4b9fbea8500674f3443e4689589\n'
-    )
+    ).format(small_fake_package_url)
     assert out.exit_code == 0
     assert expected in out.output
+
+
+@fail_below_pip9
+def test_filter_pip_markes():
+    """
+    Check that pip-compile works with pip environment markers (PEP496)
+    """
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        with open('requirements', 'w') as req_in:
+            req_in.write(
+                "six==1.10.0\n"
+                "unknown_package==0.1; python_version == '1'")
+
+        out = runner.invoke(cli, ['-n', 'requirements'])
+
+        assert out.exit_code == 0
+        assert '--output-file requirements.txt' in out.output
+        assert 'six==1.10.0' in out.output
+        assert 'unknown_package' not in out.output
+
+
+def test_no_candidates():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        with open('requirements', 'w') as req_in:
+            req_in.write('six>1.0b0,<1.0b0')
+
+        out = runner.invoke(cli, ['-n', 'requirements'])
+
+        assert out.exit_code == 2
+        assert 'Skipped pre-versions:' in out.output
+
+
+def test_no_candidates_pre():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        with open('requirements', 'w') as req_in:
+            req_in.write('six>1.0b0,<1.0b0')
+
+        out = runner.invoke(cli, ['-n', 'requirements', '--pre'])
+
+        assert out.exit_code == 2
+        assert 'Tried pre-versions:' in out.output
