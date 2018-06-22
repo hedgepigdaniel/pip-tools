@@ -11,7 +11,7 @@ def read_file(filename):
 
 setup(
     name='pip-tools',
-    use_scm_version=True,
+    version='1.8.1rc3',
     url='https://github.com/jazzband/pip-tools/',
     license='BSD',
     author='Vincent Driessen',
@@ -21,7 +21,6 @@ setup(
     packages=find_packages(exclude=['tests']),
     package_data={},
     python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
-    setup_requires=['setuptools_scm'],
     install_requires=[
         'click>=6',
         'first',
