@@ -21,7 +21,7 @@ from .._compat import (
 from ..cache import CACHE_DIR
 from ..exceptions import NoCandidateFound
 from ..utils import (fs_str, is_pinned_requirement, is_url_requirement, lookup_table,
-                     make_install_requirement, pip_version_info)
+                     make_install_requirement)
 from .base import BaseRepository
 
 
