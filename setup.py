@@ -11,7 +11,7 @@ def read_file(filename):
 
 setup(
     name='pip-tools',
-    version='1.8.1rc3',
+    version='2.0.2.1',
     url='https://github.com/jazzband/pip-tools/',
     license='BSD',
     author='Vincent Driessen',
